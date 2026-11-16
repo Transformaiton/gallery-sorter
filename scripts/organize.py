@@ -1,12 +1,12 @@
-"""שלב 4: מסדר את התמונות בתיקיות. מעתיק בלבד: המקור לא זז, לא משתנה ולא נמחק.
+"""Step 4: sort the photos into folders. Copy only: the originals are not moved, changed, or deleted.
 
-  python scripts/organize.py --run RUN                       # תוכנית: כמה ייכנסו לכל תיקייה, בלי לגעת בכלום
-  python scripts/organize.py --run RUN --dest "~/Pictures/מסדר הגלריה" --apply
+  python scripts/organize.py --run RUN                       # a plan: how many land in each folder, nothing is touched
+  python scripts/organize.py --run RUN --dest "~/Pictures/Gallery Sorter" --apply
 
-התוצאה:
-  <dest>/טיולים/...  <dest>/משפחה/...  <dest>/קבלות ומסמכים/...
-  <dest>/לבדיקה לפני מחיקה/כפולות/...   <dest>/לבדיקה לפני מחיקה/מטושטשות/...
-המחיקה עצמה, אם בכלל, נעשית ביד בטלפון או בגלריה, אחרי שעוברים על תיקיית הבדיקה.
+The result:
+  <dest>/Trips/...  <dest>/Family/...  <dest>/Receipts and documents/...
+  <dest>/Review before deleting/Duplicates/...   <dest>/Review before deleting/Blurry/...
+Deleting, if you choose to, is done by hand on the phone or in the gallery, after you look through the review folder.
 """
 import argparse
 import json
@@ -20,7 +20,7 @@ from common import REVIEW_FOLDER, album_name
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
-    ap.add_argument("--dest", default=str(Path.home() / "Pictures" / "מסדר הגלריה"))
+    ap.add_argument("--dest", default=str(Path.home() / "Pictures" / "Gallery Sorter"))
     ap.add_argument("--apply", action="store_true")
     args = ap.parse_args()
     run, dest = Path(args.run).expanduser(), Path(args.dest).expanduser()
@@ -32,11 +32,11 @@ def main():
         return Path(album_name(m["album"]))
 
     plan = Counter(str(folder(m)) for m in meta)
-    print(f"{'ייכנסו' if not args.apply else 'מעתיק'} {len(meta)} תמונות אל {dest}:")
+    print(f"{'Will place' if not args.apply else 'Copying'} {len(meta)} photos into {dest}:")
     for k, v in sorted(plan.items(), key=lambda kv: (kv[0].startswith(REVIEW_FOLDER), -kv[1])):
         print(f"  {v:6d}  {k}")
     if not args.apply:
-        print("\nזו תוכנית בלבד. להעתקה בפועל: אותה פקודה עם --apply")
+        print("\nThis is a plan only. To copy the files, run the same command with --apply")
         return
 
     copied = 0
@@ -49,7 +49,7 @@ def main():
         d.mkdir(parents=True, exist_ok=True)
         target = d / (m.get("filename") or src.name)
         k = 1
-        while target.exists():  # שמות זהים מתיקיות שונות: מוסיפים מספר, לא דורסים
+        while target.exists():  # identical names from different folders: add a number, do not overwrite
             target = d / f"{Path(m.get('filename') or src.name).stem} ({k}){src.suffix}"
             k += 1
         shutil.copy2(src, target)
@@ -57,7 +57,7 @@ def main():
         if copied % 200 == 0:
             print(f"  {copied}/{len(meta)}", flush=True)
     (run / "organized.json").write_text(json.dumps({"dest": str(dest), "copied": copied}, ensure_ascii=False))
-    print(f"\nהועתקו {copied} תמונות אל {dest}. המקור לא נגע.")
+    print(f"\nCopied {copied} photos to {dest}. The originals were not touched.")
 
 
 if __name__ == "__main__":

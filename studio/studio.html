@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<title>מסדר הגלריה</title>
+<title>Gallery Sorter</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--aqua:#77cebf;--blue:#7c9cf0;--indigo:#284ea6;--ink:#eaf1f8;--mute:#8fa3bf;--red:#ff5a7a}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:#060b17;color:var(--ink);font-family:Heebo,system-ui,sans-serif}
-/* משטח Brain: פריזמה 74°, נשימת אקווה, משקל אינדיגו, גריד 90 */
+html,body{height:100%;overflow:hidden;background:#060b17;color:var(--ink);font-family:Inter,"Segoe UI",Helvetica,Arial,sans-serif}
+/* Backdrop: 74° prism, aqua breath, indigo weight, 90px grid */
 .ground{position:fixed;inset:0;background:linear-gradient(180deg,#060b17 0%,#091123 56%,#0c162e 100%)}
 .rays{position:fixed;inset:0;background-image:repeating-linear-gradient(74deg,rgba(234,241,248,.075) 0 1.5px,transparent 1.5px 30px);
   -webkit-mask-image:linear-gradient(74deg,#000 0%,rgba(0,0,0,.4) 24%,rgba(0,0,0,.1) 42%,transparent 58%);mask-image:linear-gradient(74deg,#000 0%,rgba(0,0,0,.4) 24%,rgba(0,0,0,.1) 42%,transparent 58%)}
@@ -23,9 +23,10 @@ canvas{position:fixed;inset:0;z-index:3}
 
 header{position:fixed;top:0;right:0;left:0;height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 2.2vw;z-index:6;opacity:0}
 .title{font-weight:900;font-size:clamp(26px,2.9vw,64px);letter-spacing:-.01em;line-height:1}
-.g{background:linear-gradient(270deg,var(--aqua),var(--blue) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.g{background:linear-gradient(90deg,var(--aqua),var(--blue) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{font-weight:400;color:var(--mute);font-size:clamp(13px,1vw,21px);margin-top:.5em}
-.logo{height:clamp(26px,2.6vw,52px)}
+.brand{display:flex;align-items:center;gap:.55em;font-weight:700;font-size:clamp(12px,1.05vw,20px);letter-spacing:.01em;color:var(--ink);white-space:nowrap}
+.logo{height:clamp(26px,2.6vw,48px);width:auto;display:block}
 .stats{display:flex;gap:clamp(14px,2.6vw,56px)}
 .stat{text-align:center;min-width:5.4em}
 .stat b{display:block;font-weight:900;font-size:clamp(22px,2.5vw,52px);font-variant-numeric:tabular-nums;line-height:1}
@@ -46,7 +47,7 @@ header{position:fixed;top:0;right:0;left:0;height:var(--hh);display:flex;align-i
   border-radius:0 0 16px 16px;font-weight:900;font-size:var(--ff);color:var(--red);opacity:0;text-align:center;padding:0 .5em}
 .freed b{font-size:1.9em;line-height:1}.freed span{font-size:.6em;color:var(--ink);font-weight:700}
 
-/* פתיחה: קיר התמונות וכפתור אחד */
+/* Opening: the photo wall and a single button */
 .hero{position:fixed;inset:0;z-index:7;will-change:opacity,transform;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
 .hero .eyebrow{font-weight:400;color:var(--mute);font-size:clamp(14px,1.25vw,26px);letter-spacing:.02em}
 .hero h1{font-weight:900;font-size:clamp(44px,6.4vw,140px);line-height:1.02;margin-top:.15em;letter-spacing:-.015em}
@@ -76,36 +77,36 @@ body.render .again{display:none}
 <div class="ground"></div><div class="weight"></div><div class="rays"></div><div class="breath"></div><div class="grid"></div>
 <header id="hdr">
   <div>
-    <div class="title">מסדר את <span class="g">הגלריה</span></div>
+    <div class="title">Sorting the <span class="g">gallery</span></div>
     <div class="sub" id="sub"></div>
   </div>
   <div class="stats">
-    <div class="stat" id="s-scan"><b>0</b><span>נסרקו</span></div>
-    <div class="stat" id="s-alb"><b>0</b><span>אלבומים</span></div>
-    <div class="stat red" id="s-del"><b>0</b><span>למחיקה</span></div>
-    <div class="stat red" id="s-mb"><b>0</b><span>מקום שמתפנה</span></div>
+    <div class="stat" id="s-scan"><b>0</b><span>Scanned</span></div>
+    <div class="stat" id="s-alb"><b>0</b><span>Albums</span></div>
+    <div class="stat red" id="s-del"><b>0</b><span>To review</span></div>
+    <div class="stat red" id="s-mb"><b>0</b><span>Space to free</span></div>
   </div>
-  <img class="logo" src="logo.png" alt="Brain">
+  <div class="brand"><img class="logo" src="logo.png" alt=""><span>Transformaiton</span></div>
 </header>
 <canvas id="cv"></canvas>
 <div class="vig" id="vig"></div>
 <div class="hero" id="hero">
   <div class="eyebrow" id="eyebrow"></div>
   <h1 id="h1"></h1>
-  <button class="go" id="go" type="button">סדר לי את הגלריה</button>
+  <button class="go" id="go" type="button">Sort my gallery</button>
 </div>
-<div class="done" id="done"><div class="check" id="check">✓</div><p>הגלריה מסודרת</p><small id="dsum"></small></div>
-<div class="freed" id="freed"><b id="freedmb"></b><span>מוכנים למחיקה</span></div>
-<button class="again" id="again" type="button">↻ שוב מההתחלה</button>
+<div class="done" id="done"><div class="check" id="check">✓</div><p>Gallery sorted</p><small id="dsum"></small></div>
+<div class="freed" id="freed"><b id="freedmb"></b><span>Ready to review</span></div>
+<button class="again" id="again" type="button">↻ Start over</button>
 <script src="data.js"></script>
 <script>
-/* הכול פונקציה טהורה של הזמן: t = מילישניות מאז הלחיצה (שלילי = מסך הפתיחה).
-   אותו קוד מנגן חי בדפדפן ומרנדר פריים-אחרי-פריים (?render=1, window.renderAt(ms)).
-   מהלך: קיר תמונות → נשאבות לגלקסיה סביב הליבה → הליבה בולעת כל תמונה, מבינה אותה ויורה אותה לאלבום. */
+/* Everything is a pure function of time: t = milliseconds since the click (negative = the opening screen).
+   The same code plays live in the browser and renders frame by frame (?render=1, window.renderAt(ms)).
+   Sequence: photo wall → drawn into a galaxy around the core → the core takes in each photo, understands it, and sends it to an album. */
 const D = window.SORT_DATA, Q = new URLSearchParams(location.search);
 const SPEED = +(Q.get('speed') || 1), RENDER = !!Q.get('render');
 const sp = ms => ms / SPEED;
-const PRE = 1600;                      // רינדור: כמה זמן מסך הפתיחה לפני הלחיצה
+const PRE = 1600;                      // render mode: how long the opening screen holds before the click
 const GATHER_AT = sp(250), GATHER_SPREAD = sp(1100), GATHER = sp(1250);
 const SORT_AT = sp(2900), SORT_TOTAL = sp(11500), INTRO_N = 6, G0 = sp(640), TAU = 5;
 const IN = sp(360), FLY = sp(820);
@@ -115,15 +116,15 @@ const N = D.items.length, TS = D.tile;
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 const atlas = new Image(); atlas.src = 'atlas.jpg';
 const logo = new Image(); logo.src = 'logo.png';
-/* ביצועים: כל מה שיקר מצויר פעם אחת מראש, ובכל פריים רק מעתיקים.
-   - שלוש רמות אטלס (160/64/32): קנבס לא בונה mipmaps, והקטנה של 160 ל-20 פיקסלים בכל פריים גם יקרה וגם מרצדת
-   - צל, זוהר ולוגו כספרייטים במקום shadowBlur ו-filter, שמחושבים מחדש לכל ציור
-   - תמונות שכבר נחתו מצוירות פעם אחת לשכבת בסיס, כך שבכל פריים מציירים רק את מה שזז */
+/* Performance: everything expensive is drawn once up front, and each frame only copies.
+   - Three atlas sizes (160/64/32): canvas does not build mipmaps, and shrinking 160px to 20px every frame is both slow and flickery
+   - Shadow, glow, and logo are sprites instead of shadowBlur and filter, which are recomputed on every draw
+   - Photos that have already landed are drawn once onto a base layer, so each frame draws only what is moving */
 const LV = [];
 let shadowSpr, glowSpr, logoInk;
 function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 function prepare() {
-  // גם הרמה הגדולה עוברת לקנבס: תמונת JPEG ענקית שהדפדפן "שכח" מפוענחת מחדש (כ-65ms) ברגע הראשון שצריך אותה
+  // The large level is copied to a canvas too: a huge JPEG the browser has "forgotten" is decoded again (about 65ms) the first time it is needed
   const big = mk(atlas.naturalWidth, atlas.naturalHeight); big.getContext('2d').drawImage(atlas, 0, 0);
   LV.length = 0; LV.push({img: big, ts: TS});
   let prev = big, pw = big.width, ph = big.height;
@@ -136,7 +137,7 @@ function prepare() {
   glowSpr = mk(512, 512); { const x = glowSpr.getContext('2d'), g = x.createRadialGradient(256, 256, 0, 256, 256, 256);
     g.addColorStop(0, 'rgba(119,206,191,1)'); g.addColorStop(.12, 'rgba(119,206,191,.55)'); g.addColorStop(.4, 'rgba(124,156,240,.16)'); g.addColorStop(1, 'rgba(124,156,240,0)');
     x.fillStyle = g; x.fillRect(0, 0, 512, 512); }
-  // חימום: כל טקסטורה עולה למאיץ הגרפי כבר במסך הפתיחה, ולא באמצע ההרצה (שם זה נראה כתקיעה)
+  // Warmup: every texture is uploaded to the GPU during the opening screen, not mid-run (where it looks like a stall)
   for (const lv of LV) ctx.drawImage(lv.img, 0, 0, 1, 1, -4, -4, 1, 1);
   ctx.drawImage(shadowSpr, -4, -4, 1, 1); ctx.drawImage(glowSpr, -4, -4, 1, 1);
   if (logo.naturalWidth) { logoInk = mk(logo.naturalWidth, logo.naturalHeight); const x = logoInk.getContext('2d');
@@ -144,11 +145,11 @@ function prepare() {
     ctx.drawImage(logoInk, -4, -4, 1, 1); }
 }
 const lvFor = s => s * DPR > 128 ? LV[0] : s * DPR > 56 ? LV[1] : LV[2];
-// כתיבה ל-DOM רק כשהערך באמת השתנה (אחרת הדפדפן מחשב סגנון ופריסה מחדש בכל פריים)
+// Write to the DOM only when the value actually changed (otherwise the browser recalculates style and layout every frame)
 const setS = (el, p, v) => { if (el['_' + p] !== v) { el['_' + p] = v; el.style[p] = v; } };
 const setT = (el, v) => { if (el._t !== v) { el._t = v; el.textContent = v; } };
 const setC = (el, c, on) => { if (el['_c' + c] !== on) { el['_c' + c] = on; el.classList.toggle(c, on); } };
-const fmt = n => n.toLocaleString('he-IL');
+const fmt = n => n.toLocaleString('en-US');
 const mbTxt = mb => mb >= 1000 ? (mb / 1000).toFixed(1) + 'GB' : Math.round(mb) + 'MB';
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -158,36 +159,36 @@ const easeIn = x => x * x * x;
 const backOut = x => 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2);
 const hash = (k, s = 1) => { const x = Math.sin(k * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
 if (RENDER) document.body.classList.add('render');
-// טקסטים ותמונות הפתיחה ניתנים לשינוי מ-data.js (eyebrow, sub, intro), כך שאותו ממשק משרת כל גלריה
-// המחשה: displayTotal מציג גלריה גדולה יותר. כל אריח מייצג F תמונות, וכל המונים מוכפלים באותו יחס
+// Opening copy and photos can be changed from data.js (eyebrow, sub, intro), so the same studio serves any gallery
+// Illustration mode: displayTotal shows a larger gallery. Each tile stands for F photos, and every counter is scaled by the same ratio
 const F = (D.displayTotal || N) / N, NT = Math.round(N * F), sc = x => Math.round(x * F);
-document.getElementById('sub').textContent = D.sub || `${fmt(NT)} תמונות מהשנה האחרונה באייפון`;
-document.getElementById('eyebrow').textContent = D.eyebrow || 'הגלריה שלי באייפון';
-document.getElementById('h1').innerHTML = `${fmt(NT)} תמונות.<br><span class="g">אפס סדר.</span>`;
+document.getElementById('sub').textContent = D.sub || `${fmt(NT)} photos from the last year on this iPhone`;
+document.getElementById('eyebrow').textContent = D.eyebrow || 'My iPhone gallery';
+document.getElementById('h1').innerHTML = `${fmt(NT)} photos.<br><span class="g">No order.</span>`;
 
 const albumById = Object.fromEntries(D.albums.map(a => [a.id, a]));
 const tiles = D.items.map((it, k) => ({...it, k, album: albumById[it.a]}));
 
-// סדר המיון: קודם כמה תמונות "שמספרות את הסיפור" לאט, ואז המבול
-const INTRO_CATS = D.intro || ['trip:יוון', 'testimonial', 'receipt', 'dupes', 'food', 'work'];
+// Sort order: a few photos that "tell the story" go slowly first, then the flood
+const INTRO_CATS = D.intro || ['trip', 'receipt', 'dupes', 'food', 'work'];
 const intro = [];
 INTRO_CATS.forEach(c => {
-  const t = tiles.find(x => !x.s && !intro.includes(x) && (x.a === c || (c === 'trip:יוון' && x.a.startsWith('trip'))));
+  const t = tiles.find(x => !x.s && !intro.includes(x) && (x.a === c || (c === 'trip' && x.a.startsWith('trip'))));
   if (t) intro.push(t);
 });
 const rest = tiles.filter(t => !intro.includes(t)).sort((a, b) => hash(a.k, 3) - hash(b.k, 3));
 const order = intro.slice(0, INTRO_N).concat(rest);
-// מרווח בין שיגורים: מתחיל ב-G0 ודועך אקספוננציאלית עד קצב קבוע שממלא את SORT_TOTAL
+// Gap between launches: starts at G0 and decays exponentially to a steady rate that fills SORT_TOTAL
 const GMIN = (SORT_TOTAL - G0 * TAU) / (N - TAU);
 let acc = SORT_AT;
 order.forEach((t, j) => {
   t.j = j; t.intro = j < INTRO_N; t.launch = acc;
   acc += GMIN + (G0 - GMIN) * Math.exp(-j / TAU);
-  // מסלול בדיסק: הפנימיות נבלעות ראשונות
+  // Path on the disk: the inner photos are absorbed first
   t.rn = .2 + .8 * Math.sqrt((j + hash(j, 5) * 40) / (N + 40));
-  t.a0 = hash(j, 7) * 2 * Math.PI + t.rn * 2.4;   // דיסק מלא עם פיתול עדין, כמו טבעת סביב כוכב
-  t.w = .55 / Math.pow(t.rn, 1.15);              // רדיאנים לשנייה, פנימי מהיר יותר
-  t.gOff = (hash(j, 9) - .5) * .06;              // עובי הדיסק
+  t.a0 = hash(j, 7) * 2 * Math.PI + t.rn * 2.4;   // a full disk with a slight twist, like a ring around a star
+  t.w = .55 / Math.pow(t.rn, 1.15);              // radians per second; the inside spins faster
+  t.gOff = (hash(j, 9) - .5) * .06;              // thickness of the disk
   t.absorb = t.launch + IN; t.hq = hash(t.k, 11);
   t.land = t.absorb + (t.intro ? EMERGE + HOLD + FLY_I : FLY);
 });
@@ -217,21 +218,21 @@ function layout() {
   const hh = Math.round(H * .14); document.documentElement.style.setProperty('--hh', hh + 'px');
   const top = hh, bot = H - H * .04, gap = W * .009, edge = W * .016;
   const sideW = W * .258;
-  // מרכז: הגלקסיה והליבה
+  // Center: the galaxy and the core
   const cx = W / 2, cy = top + (bot - top) * .5;
   const RX = Math.min((W - 2 * (edge + sideW)) * .5 - W * .012, (bot - top) * .95), RY = RX * .42;
   L.c = {x: cx, y: cy, RX, RY, orb: RY * .36, gs: Math.max(14, RX * .074)};
-  // קיר הפתיחה: כל התמונות ממלאות את המסך כמו גלריה
+  // Opening wall: every photo fills the screen like a camera roll
   const cols = Math.round(Math.sqrt(N * W / H)), rows = Math.ceil(N / cols), s = Math.max(W / cols, H / rows);
   L.wall = {cols, s, x: (W - cols * s) / 2, y: (H - rows * s) / 2};
-  // אלבומים: ימין קודם (קוראים מימין), אלבום המחיקה אחרון בשמאל
+  // Albums: left side first (read left to right). The review album is last, on the right.
   const keep = D.albums.filter(a => a.kind === 'keep'), del = D.albums.filter(a => a.kind === 'del');
   const half = Math.ceil(keep.length / 2);
-  const right = keep.slice(0, half), left = keep.slice(half).concat(del);
-  placeSide(right, W - edge - sideW, sideW, top, bot, gap, 2);
+  const left = keep.slice(0, half), right = keep.slice(half).concat(del);
   placeSide(left, edge, sideW, top, bot, gap, 2);
+  placeSide(right, W - edge - sideW, sideW, top, bot, gap, 2);
   placeSlots();
-  D.albums.forEach((a, i) => { a.order = a.kind === 'del' ? 99 : (right.includes(a) ? i : i - half); });
+  D.albums.forEach((a, i) => { a.order = a.kind === 'del' ? 99 : (left.includes(a) ? i : i - half); });
   const d = del[0];
   if (d) {
     const fr = document.getElementById('freed');
@@ -250,7 +251,7 @@ function placeSide(list, x0, w, top, bot, gap, colsN) {
   list.forEach(a => { const c = colsArr.reduce((m, c) => c.w < m.w ? c : m); c.items.push(a); c.w += wt(a); });
   colsArr.forEach((c, ci) => {
     let y = top; const avail = bot - top - gap * (c.items.length - 1);
-    c.items.forEach(a => { const h = avail * wt(a) / c.w; a.box = {x: x0 + (colsN - 1 - ci) * (cw + gap), y, w: cw, h}; y += h + gap; });
+    c.items.forEach(a => { const h = avail * wt(a) / c.w; a.box = {x: x0 + ci * (cw + gap), y, w: cw, h}; y += h + gap; });
   });
   list.forEach(a => {
     if (!a.el) {
@@ -264,23 +265,25 @@ function placeSide(list, x0, w, top, bot, gap, colsN) {
     const b = a.box, ch = a.ch = Math.max(36, Math.min(52, b.h * .22));
     Object.assign(a.el.style, {left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px'});
     a.el.style.setProperty('--ch', ch + 'px');
-    a.el.style.setProperty('--cf', Math.max(14, Math.min(ch * .52, 25, (b.w - 30) / (a.name.length * .58 + 2.6))) + 'px');
+    // Latin names are longer than the titles this layout was drawn around, so the size tracks the label.
+    const fit = (b.w - 58) / Math.max(a.name.length * 0.56, 1);
+    a.el.style.setProperty('--cf', Math.max(10, Math.min(ch * .46, 22, fit)) + 'px');
     const iw = b.w - 18, ih = b.h - ch - 12; let s = Math.min(iw, ih);
     while (s > 3 && Math.floor(iw / s) * Math.floor(ih / s) < a.n) s -= .5;
     const c = Math.max(1, Math.floor(iw / s));
-    a.mosaic = {x: b.x + 9 + (iw - c * s), y: b.y + ch + 4, s, c};
+    a.mosaic = {x: b.x + 9, y: b.y + ch + 4, s, c};
   });
 }
-// בלי הקצאות בתוך הפריים: כל אריח מחזיק אובייקט מצב אחד שמתעדכן במקום, ומיקום המשבצת מחושב פעם אחת בפריסה.
+// No allocations inside the frame: each tile keeps one state object that is updated in place, and the slot position is computed once during layout.
 const slot = t => t.sl;
 function placeSlots() {
   for (const t of order) { const m = t.album.mosaic, col = t.slotK % m.c, row = Math.floor(t.slotK / m.c);
-    t.sl = {x: m.x + (m.c - 1 - col) * m.s, y: m.y + row * m.s, s: m.s}; t.st = t.st || {}; }
+    t.sl = {x: m.x + col * m.s, y: m.y + row * m.s, s: m.s}; t.st = t.st || {}; }
 }
 const Wp = {x: 0, y: 0, s: 0}, G = {x: 0, y: 0, s: 0, d: 0};
 function wallPos(t, clock) { const w = L.wall, col = t.k % w.cols, row = Math.floor(t.k / w.cols);
-  Wp.x = w.x + (w.cols - 1 - col) * w.s; Wp.y = w.y + row * w.s + Math.sin(clock / 900 + t.k * .37) * w.s * .03; Wp.s = w.s; return Wp; }
-// מיקום על הדיסק בזמן t: אליפסה מוטה, עומק לפי sin, קרוב = גדול ובהיר
+  Wp.x = w.x + col * w.s; Wp.y = w.y + row * w.s + Math.sin(clock / 900 + t.k * .37) * w.s * .03; Wp.s = w.s; return Wp; }
+// Position on the disk at time t: a tilted ellipse, depth from sin, nearer means larger and brighter
 function gal(t, tm, shrink = 1, spin = 0) {
   const c = L.c, th = t.a0 + t.w * tm / 1000 + spin, r = t.rn * shrink;
   const d = Math.sin(th), sc = (.62 + .6 * (d + 1) / 2) * (1.15 - .35 * t.rn);
@@ -292,7 +295,7 @@ function put(o, x, y, s, d, a, rot, lift, phase, insK = 0) {
 }
 const qb = (p0, q, p1, e) => (1 - e) * (1 - e) * p0 + 2 * (1 - e) * e * q + e * e * p1;
 
-// מצב כל אריח בזמן t, נכתב לתוך t.st: {x,y,s,d,a,rot,lift,phase,insK}
+// State of each tile at time t, written into t.st: {x,y,s,d,a,rot,lift,phase,insK}
 function tileState(t, tm, clock) {
   const o = t.st, g0 = GATHER_AT + t.gStart;
   if (tm < g0) { const w = wallPos(t, clock); return put(o, w.x, w.y, w.s, 0, 1, 0, 0, 'wall'); }
@@ -343,7 +346,7 @@ function drawTile(t, st) {
   } else blit(ctx, t, st.x, st.y, st.s);
   ctx.globalAlpha = 1;
 }
-// שכבת הבסיס: כל תמונה שנחתה מצוירת עליה פעם אחת. קפיצה אחורה בזמן (התחלה מחדש, סטילס) = ציור מחדש
+// Base layer: each photo that has landed is drawn onto it once. A jump backward in time (restart, stills) redraws it
 function syncBase(tm) {
   const n = upTo(landTimes, tm);
   if (n < baseN) { baseCtx.clearRect(0, 0, W, H); baseN = 0; }
@@ -351,7 +354,7 @@ function syncBase(tm) {
   baseN = n;
 }
 
-// הליבה: כדור אור עם טבעות מסתובבות, פועם בכל בליעה
+// The core: a ball of light with spinning rings, pulsing on every absorption
 function drawOrb(tm, pulse, k) {
   if (k <= 0) return;
   const c = L.c, R = c.orb * k * (1 + .1 * pulse);
@@ -375,17 +378,17 @@ function drawOrb(tm, pulse, k) {
 }
 
 function pill(x, y, label, target, del, fs) {
-  ctx.font = `700 ${fs}px Heebo, system-ui, sans-serif`; ctx.direction = 'rtl'; ctx.textBaseline = 'middle';
-  const arrow = '  ←  ', wl = ctx.measureText(label).width, wa = ctx.measureText(arrow).width, wt = ctx.measureText(target).width;
+  ctx.font = `700 ${fs}px Inter, "Segoe UI", sans-serif`; ctx.direction = 'ltr'; ctx.textBaseline = 'middle';
+  const arrow = '  →  ', wl = ctx.measureText(label).width, wa = ctx.measureText(arrow).width, wt = ctx.measureText(target).width;
   const padX = fs * .95, w = wl + wa + wt + padX * 2, h = fs * 2.15, x0 = x - w / 2;
   ctx.fillStyle = 'rgba(6,11,23,.94)'; ctx.strokeStyle = del ? 'rgba(225,29,72,.8)' : 'rgba(119,206,191,.7)'; ctx.lineWidth = 1.6;
   ctx.beginPath(); ctx.roundRect(x0, y - h / 2, w, h, h / 2); ctx.fill(); ctx.stroke();
   ctx.save(); ctx.globalAlpha *= .22; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
-  ctx.textAlign = 'right'; let xr = x0 + w - padX;
-  ctx.fillStyle = '#eaf1f8'; ctx.fillText(label, xr, y); xr -= wl;
-  ctx.fillStyle = del ? '#ff5a7a' : '#77cebf'; ctx.fillText(arrow, xr, y); xr -= wa; ctx.fillText(target, xr, y);
+  ctx.textAlign = 'left'; let xr = x0 + padX;
+  ctx.fillStyle = '#eaf1f8'; ctx.fillText(label, xr, y); xr += wl;
+  ctx.fillStyle = del ? '#ff5a7a' : '#77cebf'; ctx.fillText(arrow, xr, y); xr += wa; ctx.fillText(target, xr, y);
 }
-const chipLabel = c => c.album.kind === 'del' ? (c.tag && /טשטוש|מטושטש/.test(c.tag) ? 'מטושטשת' : 'כפולה') : (c.tag || c.album.name);
+const chipLabel = c => c.album.kind === 'del' ? (c.tag && /blur/i.test(c.tag) ? 'Blurry' : 'Duplicate') : (c.tag || c.album.name);
 
 const $c = {}, $ = id => $c[id] || ($c[id] = document.getElementById(id));
 const statB = id => $c['b' + id] || ($c['b' + id] = document.querySelector(`#${id} b`));
@@ -393,7 +396,7 @@ function draw(tm, clock) {
   if (!L.c) return;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
   const c = L.c;
-  // פתיחה: כפתור וכותרת נעלמים, הכרטיסים נכנסים מהצדדים
+  // Opening: the button and title fade, and the cards come in from the sides
   const heroK = tm < 0 ? 1 : 1 - clamp(tm / sp(380));
   setS($('hero'), 'opacity', heroK.toFixed(3)); setS($('hero'), 'transform', `scale(${(1 + (1 - heroK) * .08).toFixed(4)})`);
   setS($('hero'), 'visibility', heroK > 0 ? 'visible' : 'hidden');
@@ -404,11 +407,11 @@ function draw(tm, clock) {
     setS(a.el, 'opacity', (p ? (a.shown > 0 ? 1 : .55) * p : .002).toFixed(3));
     setS(a.el, 'transform', p >= 1 ? 'none' : `translateX(${((1 - p) * a.el.side * 60).toFixed(1)}px)`);
   }
-  // עמעום הקיר מאחורי טקסט הפתיחה
+  // Dim the wall behind the opening text
   const pulseN = tm > 0 ? upTo(absorbs, tm) - upTo(absorbs, tm - sp(160)) : 0;
   const pulse = clamp(pulseN / 4);
   const orbK = tm < sp(300) ? 0 : (tm < FINISH ? backOut(clamp((tm - sp(300)) / sp(700))) : 1 - easeIn(clamp((tm - FINISH) / sp(450))));
-  // שלוש שכבות: אחורי הדיסק, הליבה, ומה שלפניה ובתעופה
+  // Three layers: behind the disk, the core, and whatever is in front or in flight
   syncBase(tm);
   ctx.drawImage(base, 0, 0, W, H);
   BACK.length = FRONT.length = TOP.length = 0;
@@ -432,11 +435,11 @@ function draw(tm, clock) {
   for (const t of BACK) drawTile(t, t.st);
   drawOrb(tm, pulse, orbK);
   for (const t of FRONT) drawTile(t, t.st);
-  // ויניטה על הקיר בפתיחה כדי שהכותרת תיקרא (שכבת DOM: המאיץ הגרפי מעמעם אותה בלי לצייר מחדש)
+  // A vignette on the opening wall so the title stays readable (a DOM layer: the GPU fades it without redrawing)
   const v = tm < 0 ? 1 : 1 - clamp(tm / sp(600));
   setS($('vig'), 'opacity', v.toFixed(3)); setS($('vig'), 'visibility', v > 0 ? 'visible' : 'hidden');
   for (const t of TOP) { const st = t.st;
-    if (st.phase === 'inspect') {   // הליבה "מסתכלת" על התמונה: מסגרת זוהרת וקרן סריקה
+    if (st.phase === 'inspect') {   // the core "looks at" the photo: a glowing frame and a scan line
       const gr = st.s * 1.25; ctx.globalAlpha = .45; ctx.drawImage(glowSpr, st.x + st.s / 2 - gr, st.y + st.s / 2 - gr, gr * 2, gr * 2); ctx.globalAlpha = 1;
       ctx.fillStyle = '#0b1328'; ctx.fillRect(st.x - 6, st.y - 6, st.s + 12, st.s + 12);
       drawTile(t, st);
@@ -451,7 +454,7 @@ function draw(tm, clock) {
       }
     } else drawTile(t, st);
   }
-  // תגית: מה הליבה זיהתה ולאן זה הולך
+  // Tag: what the core recognized, and which album it is going to
   const ci = upTo(chipAt, tm) - 1;
   if (ci >= 0) {
     const ch = chips[ci], life = ch.intro ? EMERGE + HOLD + sp(250) : CHIP_LIFE, age = tm - ch.absorb;
@@ -462,7 +465,7 @@ function draw(tm, clock) {
       pill(0, 0, chipLabel(ch), ch.album.name, ch.album.kind === 'del', fs); ctx.restore();
     }
   }
-  // כרטיסים ומונים
+  // Cards and counters
   let albums = 0, delN = 0, mb = 0;
   for (const a of D.albums) {
     const n = upTo(a.lands, tm), last = n ? a.lands[n - 1] : -1e9;
@@ -473,11 +476,11 @@ function draw(tm, clock) {
   }
   setT(statB('s-scan'), fmt(sc(tm > 0 ? upTo(absorbs, tm) : 0))); setT(statB('s-alb'), fmt(albums));
   setT(statB('s-del'), fmt(sc(delN))); setT(statB('s-mb'), mbTxt(mb * F));
-  // סיום: הליבה מתכווצת לוי, המספרים קופצים, האלבום האדום מראה כמה מקום מתפנה
+  // Finish: the core shrinks into a check mark, the numbers pop, and the red album shows how much space can be freed
   const f = tm - FINISH;
   setS($('done'), 'opacity', clamp((f - sp(250)) / sp(500)).toFixed(3));
   setS($('check'), 'transform', `scale(${(.3 + .7 * backOut(clamp((f - sp(250)) / sp(650)))).toFixed(4)})`);
-  setT($('dsum'), `${fmt(NT)} תמונות · ${albums} אלבומים · ${mbTxt(mb * F)} מתפנים`);
+  setT($('dsum'), `${fmt(NT)} photos · ${albums} albums · ${mbTxt(mb * F)} to free`);
   setT($('freedmb'), mbTxt(mb * F));
   setS($('freed'), 'opacity', clamp((f - sp(500)) / sp(600)).toFixed(3));
   ['s-alb', 's-del', 's-mb'].forEach((id, k) => {
@@ -486,7 +489,7 @@ function draw(tm, clock) {
   if (!RENDER) $('again').classList.toggle('on', f > sp(1800));
 }
 
-// מתי כל אריח עוזב את הקיר: גל שמתפשט מהמרכז החוצה
+// When each tile leaves the wall: a wave that spreads outward from the center
 function setGather() {
   const w = L.wall, mx = W / 2, my = H / 2, maxD = Math.hypot(W / 2, H / 2);
   for (const t of order) {
@@ -495,7 +498,7 @@ function setGather() {
   }
 }
 
-// ניגון חי
+// Live playback
 let T0 = null; const C0 = performance.now();
 function loop(now) { requestAnimationFrame(loop); draw(T0 === null ? -1 : now - T0, now - C0); }
 function start() { if (T0 === null) T0 = performance.now(); }
@@ -504,7 +507,7 @@ $('go').addEventListener('click', start);
 $('again').addEventListener('click', reset);
 addEventListener('keydown', e => {
   if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); T0 === null ? start() : null; }
-  if (e.key === 'r' || e.key === 'R' || e.key === 'ר') reset();
+  if (e.code === 'KeyR') reset();
 });
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { layout(); setGather(); }, 120); });
 window.TOTAL_MS = PRE + FINISH + sp(3200);

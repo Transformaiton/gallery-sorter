@@ -1,42 +1,42 @@
-# איך מביאים את התמונות למחשב, לפי מכשיר
+# How to get the photos onto the computer, by device
 
-לכל מסלול: התוצאה היא תיקייה במחשב (או ספריית Photos במק), ואז `gather.py`.
+Every path ends the same way: a folder on the computer (or the Photos library on a Mac), and then `gather.py`.
 
-## אייפון + מק, עם תמונות iCloud (או סנכרון לאפליקציית Photos)
-הכי פשוט: התמונות כבר במק.
-- `gather.py --mac-photos --n 1000 --out ...` (צריך `pip install osxphotos`)
-- macOS עשוי לבקש הרשאה לטרמינל לגשת לתמונות: לאשר.
-- עובד גם עם "Optimize Mac Storage": המק שומר תצוגה מקדימה של כמעט כל תמונה, וזה מספיק לסיווג. מה שאין לו עותק בכלל מדולג, והסקריפט מדפיס כמה.
-- נכשל? Photos ← לבחור תמונות (⌘A) ← File ← Export ← Export Unmodified Originals ← לתיקייה, ואז `--folder`.
+## iPhone + Mac, with iCloud photos (or photos synced to the Photos app)
+This is the simplest path. The photos are already on the Mac.
+- `gather.py --mac-photos --n 1000 --out ...` (requires `pip install osxphotos`)
+- macOS may ask for permission for the terminal to access photos. Allow it.
+- It also works with "Optimize Mac Storage". The Mac keeps a preview of almost every photo, and that is enough to classify. Anything with no copy at all is skipped, and the script prints how many.
+- If it fails: in Photos, select the photos (Command-A), then File, Export, Export Unmodified Originals, into a folder, and then use `--folder`.
 
-## אייפון + מק, בלי iCloud
-- לחבר בכבל, לפתוח את האפליקציה Image Capture (לכידת תמונות), לבחור תיקייה ו-Import All.
-- אחר כך: `gather.py --folder <התיקייה>`
+## iPhone + Mac, without iCloud
+- Connect a cable, open the Image Capture app, choose a folder, and click Import All.
+- Then: `gather.py --folder <the-folder>`
 
-## אייפון + ווינדוס, עם iCloud
-- להתקין את iCloud for Windows מה-Microsoft Store, להתחבר, ולהדליק Photos.
-- התמונות יורדות לתיקייה `Pictures\iCloud Photos` (find_sources מוצא אותה לבד).
-- אחר כך: `gather.py --folder <התיקייה>`
+## iPhone + Windows, with iCloud
+- Install iCloud for Windows from the Microsoft Store, sign in, and turn Photos on.
+- The photos download to `Pictures\iCloud Photos` (find_sources locates that folder on its own).
+- Then: `gather.py --folder <the-folder>`
 
-## אייפון בלי גישה למחשב שלו (רק דפדפן)
-- icloud.com/photos ← לבחור תמונות ← הורדה. אפשר עד 1,000 תמונות בכל הורדה, אז זה מתאים לניסיון.
+## iPhone, with only a browser
+- Open icloud.com/photos, select photos, and download. A download can include up to 1,000 photos, so this path fits a trial run.
 
-## אייפון + ווינדוס, בכבל
-- לחבר בכבל ולאשר "סמוך על המחשב" באייפון.
-- אפליקציית Photos של ווינדוס ← Import ← From a connected device, או בסייר הקבצים: This PC ← Apple iPhone ← Internal Storage ← DCIM, ולהעתיק לתיקייה.
-- אם האייפון שומר HEIC, זה בסדר: הסקיל קורא HEIC.
-- אחר כך: `gather.py --folder <התיקייה>`
+## iPhone + Windows, over a cable
+- Connect a cable and tap Trust This Computer on the iPhone.
+- The Windows Photos app: Import, From a connected device. Or in File Explorer: This PC, Apple iPhone, Internal Storage, DCIM, and copy that to a folder.
+- HEIC from the iPhone is fine. The tool reads HEIC.
+- Then: `gather.py --folder <the-folder>`
 
-## אנדרואיד + כל מחשב (העתקה בכבל)
-- לחבר בכבל, ובהתראה בטלפון לבחור "העברת קבצים" (File transfer / MTP).
-- במק צריך את האפליקציה Android File Transfer או OpenMTP (חינמית); בווינדוס זה מופיע בסייר הקבצים.
-- להעתיק את התיקייה DCIM/Camera (ואם רוצים גם Pictures/Screenshots) לתיקייה במחשב.
-- אחר כך: `gather.py --folder <התיקייה>`
+## Android + any computer (copy over a cable)
+- Connect a cable, and on the phone notification choose File transfer (MTP).
+- On a Mac you need Android File Transfer or OpenMTP (free). On Windows the phone shows up in File Explorer.
+- Copy the DCIM/Camera folder (and Pictures/Screenshots, if you want those too) to a folder on the computer.
+- Then: `gather.py --folder <the-folder>`
 
-## אנדרואיד או כל מי שמגבה ל-Google Photos (בלי כבל)
-- https://takeout.google.com ← "Deselect all" ← לסמן רק Google Photos ← Next ← Create export.
-- גוגל שולחת מייל עם קובצי zip (יכול לקחת מכמה דקות עד שעות). להוריד אותם להורדות. **לא לחלץ.**
-- `gather.py --folder ~/Downloads` (או התיקייה שבה הם יושבים): הסקיל מחלץ רק את התמונות, וקורא את קובצי ה-json של גוגל (תאריך ומיקום מקוריים, כולל שמות חתוכים וכפילויות).
+## Android, or anyone who backs up to Google Photos (no cable)
+- Open https://takeout.google.com, click Deselect all, check only Google Photos, then Next, then Create export.
+- Google emails a link to zip files. That can take from a few minutes to a few hours. Download them to Downloads. **Do not unzip them.**
+- `gather.py --folder ~/Downloads` (or whichever folder they are in). The tool extracts only the photos, and reads Google's json files for the original date and location, including truncated names and duplicates.
 
-## איך הממשק נראה בכל מסלול
-אותו דבר. הטלפון לא משנה: מה שקובע זה שיש תיקייה עם תמונות.
+## How the studio looks on each path
+The same. The phone does not matter. What matters is a folder of photos.

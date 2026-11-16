@@ -1,12 +1,12 @@
-"""שלב 1: איסוף התמונות לתיקיית עבודה.
+"""Step 1: collect the photos into a working folder.
 
-שני מקורות:
-  --folder PATH    כל תיקייה במחשב: תמונות מאייפון או מאנדרואיד שהועתקו בכבל, תיקיית iCloud Photos
-                   בווינדוס, כונן גיבוי. גם קובצי ה-zip של Google Takeout, כמו שהורדו, בלי לחלץ:
-                   מצביעים על התיקייה שבה הם יושבים (או על קובץ zip אחד), והסקריפט מחלץ רק את התמונות.
-  --mac-photos     ספריית התמונות של המק (אייפון עם תמונות iCloud). דורש: pip install osxphotos
+Two sources:
+  --folder PATH    any folder on the computer: photos copied from an iPhone or Android over a cable, an iCloud Photos
+                   folder on Windows, a backup drive. Also Google Takeout zip files, as downloaded, without unzipping:
+                   point at the folder they sit in (or at a single zip file), and the script extracts only the photos.
+  --mac-photos     the Mac Photos library (an iPhone with iCloud photos). Requires: pip install osxphotos
 
-לכל תמונה נשמרים שני עותקים מוקטנים בלבד (384px לסיווג, 160px לממשק). המקור לא זז ולא משתנה.
+For each photo only two small copies are saved (384px for classification, 160px for the studio). The original is not moved or changed.
 
   python scripts/gather.py --folder ~/Pictures/phone --n 1000 --out ~/.gallery-sorter/runs/run1
   python scripts/gather.py --mac-photos --n 1000 --out ~/.gallery-sorter/runs/run1
@@ -24,20 +24,21 @@ from pathlib import Path
 from PIL import Image, ImageOps
 from pillow_heif import register_heif_opener
 
-import common  # noqa: F401  (קידוד פלט בטוח בווינדוס)
+import common  # noqa: F401  (safe output encoding on Windows)
 
 register_heif_opener()
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp"}
-SHOT_RE = re.compile(r"screenshot|screen shot|צילום מסך|scr_|screenshot_", re.I)
+# iOS names a screenshot "Screenshot" in English. The escaped form is the same filename on a Hebrew-language phone.
+SHOT_RE = re.compile(r"screenshot|screen shot|scr_|screenshot_|\u05e6\u05d9\u05dc\u05d5\u05dd \u05de\u05e1\u05da", re.I)
 
 
 def exif_info(im):
-    """תאריך צילום ו-GPS מתוך EXIF, אם יש."""
+    """Capture date and GPS from EXIF, when present."""
     date = lat = lon = None
     camera = False
     try:
         ex = im.getexif()
-        camera = bool(ex.get(271) or ex.get(272))  # יצרן/דגם מצלמה: מבדיל צילום אמיתי מצילום מסך
+        camera = bool(ex.get(271) or ex.get(272))  # camera make/model: separates a real photo from a screenshot
         sub = ex.get_ifd(0x8769)
         raw = sub.get(36867) or sub.get(36868) or ex.get(306)
         if raw:
@@ -69,9 +70,10 @@ def _jsons_in(d):
 
 
 def sidecar_for(path):
-    """Google Takeout שם ליד כל תמונה json עם תאריך ומיקום. השם משתנה בין גרסאות, ונחתך ב-51 תווים:
+    """Google Takeout places a json file with the date and location next to each photo. The name changes between
+    versions, and is truncated at 51 characters:
     IMG_1.jpg.json, IMG_1.jpg.supplemental-metadata.json, IMG_1.jpg.supplemental-me.json,
-    ולכפילויות: IMG_1(1).jpg ← IMG_1.jpg(1).json או IMG_1.jpg.supplemental-metadata(1).json."""
+    and for duplicates: IMG_1(1).jpg <- IMG_1.jpg(1).json or IMG_1.jpg.supplemental-metadata(1).json."""
     name, d = path.name, str(path.parent)
     files = _jsons_in(d)
     m = re.match(r"^(.*)\((\d+)\)(\.[^.]+)$", name)
@@ -110,7 +112,7 @@ def takeout_sidecar(path):
 
 
 def unzip_takeout(zips, dest):
-    """מחלץ מכל zip רק תמונות וקובצי json (לא סרטונים), לתוך תיקיית ההרצה. הרצה חוזרת לא מחלצת שוב."""
+    """Extract only photos and json files from each zip (not videos), into the run folder. A second run does not extract again."""
     dest.mkdir(parents=True, exist_ok=True)
     n = 0
     for z in zips:
@@ -124,7 +126,7 @@ def unzip_takeout(zips, dest):
                     target.parent.mkdir(parents=True, exist_ok=True)
                     with zf.open(info) as src, open(target, "wb") as out:
                         out.write(src.read())
-                    try:  # תאריך הקובץ מתוך ה-zip, לגיבוי כשאין לתמונה json
+                    try:  # file date from the zip, as a fallback when the photo has no json
                         ts = datetime(*info.date_time).timestamp()
                         os.utime(target, (ts, ts))
                     except (ValueError, OSError):
@@ -145,7 +147,7 @@ def scan(root, skip):
 def from_folder(root, n, skip, out):
     root = Path(root).expanduser().resolve()
     if not root.exists():
-        sys.exit(f"לא נמצא: {root}")
+        sys.exit(f"Not found: {root}")
     skip = [Path(s).expanduser().resolve() for s in skip]
     zips = [root] if root.suffix.lower() == ".zip" else (sorted(root.glob("*.zip")) if root.is_dir() else [])
     files = scan(root, skip) if root.is_dir() else []
@@ -153,7 +155,7 @@ def from_folder(root, n, skip, out):
         files += scan(unzip_takeout(zips, out / "unzipped"), [])
     print(f"found {len(files)} images in {root}", flush=True)
     if not files:
-        sys.exit("לא נמצאו תמונות. בדקו שהתיקייה נכונה (ושקובצי ה-zip הורדו עד הסוף).")
+        sys.exit("No photos found. Check that the folder is correct (and that the zip files finished downloading).")
     items = []
     for p in files:
         try:
@@ -176,9 +178,9 @@ def from_mac_photos(n, library):
     try:
         import osxphotos
     except ImportError:
-        sys.exit("חסר osxphotos. התקינו: pip install osxphotos")
+        sys.exit("osxphotos is missing. Install it with: pip install osxphotos")
     lib = Path(library or "~/Pictures/Photos Library.photoslibrary").expanduser()
-    # נתיב מפורש לבסיס הנתונים: בלעדיו osxphotos מנסה לקרוא העדפה מוגנת של Photos ונתקע על הרשאות
+    # An explicit database path: without it, osxphotos tries to read a protected Photos preference and stalls on permissions
     db = osxphotos.PhotosDB(dbfile=str(lib / "database" / "Photos.sqlite"))
     photos = [p for p in db.photos(images=True, movies=False) if p.date and not p.hidden]
     photos.sort(key=lambda p: p.date, reverse=True)
@@ -189,7 +191,7 @@ def from_mac_photos(n, library):
         cands = [d for d in (p.path_derivatives or []) if d and os.path.exists(d)]
         src = max(cands, key=os.path.getsize) if cands else (p.path if p.path and os.path.exists(p.path) else None)
         if not src:
-            cloud_only += 1  # התמונה יושבת רק ב-iCloud ואין לה אפילו תצוגה מקדימה במק
+            cloud_only += 1  # the photo lives only in iCloud and has no preview on this Mac
             continue
         lat, lon = p.location if p.location else (None, None)
         items.append({"src": src, "date": p.date.astimezone(timezone.utc), "lat": lat, "lon": lon,
@@ -205,8 +207,8 @@ def main():
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--folder")
     g.add_argument("--mac-photos", action="store_true")
-    ap.add_argument("--library", help="נתיב לספריית תמונות אחרת במק")
-    ap.add_argument("--n", type=int, default=1000, help="כמה תמונות (האחרונות קודם)")
+    ap.add_argument("--library", help="path to a different Photos library on the Mac")
+    ap.add_argument("--n", type=int, default=1000, help="how many photos (newest first)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     out = Path(args.out).expanduser()
