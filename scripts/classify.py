@@ -1,12 +1,12 @@
-"""שלב 2: מה יש בכל תמונה, מה כפול, מה מטושטש, ומה שייך לאיזה טיול.
+"""Step 2: what is in each photo, what is a duplicate, what is blurry, and which trip it belongs to.
 
-- תוכן: מודל ראייה (Gemini, או OpenAI כשאין מפתח Gemini) רואה את העותקים המוקטנים (384px)
-  במנות של 10 ומחזיר קטגוריה ותגית קצרה בעברית.
-- כפולות: חתימה חזותית מקומית (dHash) + צולמו בהפרש של עד 10 דקות. מכל קבוצה נשארת החדה ביותר.
-- מטושטשות: מדד חדות מקומי, ורק כשגם המודל מסכים.
-- טיולים: לפי ה-GPS שבתמונה. "בית" = האזור שבו צולמו הכי הרבה תמונות; ימים רצופים רחוק ממנו = טיול.
+- Content: a vision model (Gemini, or OpenAI when there is no Gemini key) sees the small copies (384px)
+  in batches of 10 and returns a category and a short English tag.
+- Duplicates: a local visual signature (dHash) plus a capture time within 10 minutes. The sharpest photo in each group is kept.
+- Blurry shots: a local sharpness score, and only when the model agrees.
+- Trips: from the GPS stored in the photo. "Home" is the area with the most photos; consecutive days away from it are a trip.
 
-תוצאות המודל נשמרות בקאש, כך שהרצה חוזרת לא משלמת שוב.
+Model results are cached, so a second run does not pay again.
 
   python scripts/classify.py --run ~/.gallery-sorter/runs/run1
 """
@@ -25,28 +25,28 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from common import HEB_MONTHS, provider
+from common import MONTHS, provider
 
 CATS = {
-    "trip": "טיול או חופשה: נוף מטייל, אתר תיירות, מלון, שדה תעופה, רחוב בעיר זרה",
-    "family": "משפחה, ילדים, תינוקות, רגעים בבית",
-    "friends": "חברים, אירועים, חתונות, ימי הולדת, מסיבות",
-    "food": "אוכל, מסעדות, בתי קפה, משקאות",
-    "pets": "כלב, חתול או חיית מחמד אחרת",
-    "nature": "נוף וטבע קרוב לבית: שקיעה, ים, פארק, שמיים",
-    "work": "עבודה: משרד, הרצאה, מצגת, צוות, לוח, מסך מחשב",
-    "receipt": "קבלה, חשבונית, אישור תשלום, הזמנה, כרטיס טיסה",
-    "docs": "צילום של מסמך נייר, תעודה, חוזה, פתק, לוח מודעות",
-    "saved": "צילום מסך של משהו שנשמר כדי לחזור אליו: מתכון, טיפ, פוסט, כתבה, רעיון, מוצר",
-    "screens": "צילום מסך אחר: שיחה, הגדרות, מפה, מסך אפליקציה",
-    "memes": "מם, בדיחה, תמונה מצחיקה מהרשת",
-    "shopping": "מוצר בחנות, קניות, השוואת מחירים",
-    "other": "שום דבר מהנ\"ל",
+    "trip": "a trip or vacation: travel scenery, a landmark, a hotel, an airport, a street in another city",
+    "family": "family, children, babies, moments at home",
+    "friends": "friends, events, weddings, birthdays, parties",
+    "food": "food, restaurants, cafes, drinks",
+    "pets": "a dog, cat, or other pet",
+    "nature": "scenery and nature close to home: a sunset, the sea, a park, the sky",
+    "work": "work: an office, a talk, a slide, a team, a whiteboard, a computer screen",
+    "receipt": "a receipt, invoice, payment confirmation, order, or boarding pass",
+    "docs": "a photo of a paper document, certificate, contract, note, or notice board",
+    "saved": "a screenshot saved to come back to: a recipe, tip, post, article, idea, or product",
+    "screens": "any other screenshot: a chat, settings, a map, an app screen",
+    "memes": "a meme, a joke, or a funny picture from the internet",
+    "shopping": "a product in a store, shopping, comparing prices",
+    "other": "none of the above",
 }
 PROMPT = f"""You sort a person's phone camera roll. For EACH image (numbered in order), return:
-- "cat": exactly one key from this list (descriptions are in Hebrew):
+- "cat": exactly one key from this list:
 {json.dumps(CATS, ensure_ascii=False, indent=1)}
-- "tag": 2-4 Hebrew words naming what is in the image, specific (e.g. "חוף בים", "קבלה מסופר", "מתכון לעוגה").
+- "tag": 2-4 English words naming what is in the image, specific (e.g. "beach at sunset", "grocery receipt", "cake recipe").
 - "blurry": true only if the image is clearly out of focus or motion-blurred.
 - "accidental": true if it is an accidental shot (pocket, floor, black frame, finger).
 - "sensitive": true if it shows private data (ID card, bank details, phone numbers in a private chat, passwords, nudity).
@@ -54,15 +54,15 @@ Return ONLY a JSON array with one object per image, in the same order, each with
 
 
 class Fatal(Exception):
-    """תקלה שאין טעם לנסות שוב (מפתח שגוי, נגמר הקרדיט)."""
+    """An error that should not be retried (bad key, out of credit)."""
 
 
 def fatal_reason(msg):
     m = msg.lower()
     if "api key" in m or "api_key_invalid" in m or "permission_denied" in m or "incorrect api key" in m or " 401" in m:
-        return "המפתח לא תקין. צרו מפתח חדש ושמרו אותו שוב."
+        return "The API key is not valid. Create a new key and save it again."
     if "credits are depleted" in m or "insufficient_quota" in m or "billing" in m or " 402" in m:
-        return "נגמר הקרדיט בחשבון של ספק המודל. טוענים קרדיט (או מחליפים מפתח) ומריצים שוב: מה שכבר סווג נשמר."
+        return "The model provider account is out of credit. Add credit (or switch keys) and run again: everything already classified is saved."
     return None
 
 
@@ -117,7 +117,7 @@ def classify_batch(prov, model, run, idxs):
             if why:
                 raise Fatal(why)
             print("retry", attempt, str(e)[:160], flush=True)
-            time.sleep(5 * (attempt + 1))  # מגבלת קצב (במיוחד במסלול החינמי): מחכים ומנסים שוב
+            time.sleep(5 * (attempt + 1))  # rate limit (especially on the free tier): wait and try again
     return {}
 
 
@@ -141,20 +141,20 @@ def km(a, b):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
-    ap.add_argument("--model", help="ברירת מחדל: gemini-3-flash-preview, או gpt-5.4-mini כשהמפתח של OpenAI")
+    ap.add_argument("--model", help="default: gemini-3-flash-preview, or gpt-5.4-mini when the key is for OpenAI")
     ap.add_argument("--workers", type=int, default=6)
     args = ap.parse_args()
     run = Path(args.run).expanduser()
     meta = json.loads((run / "meta.json").read_text(encoding="utf-8"))
 
-    # 1. סיווג תוכן
+    # 1. Classify content
     cache_f = run / "gemini.json"
     cache = {int(k): v for k, v in json.loads(cache_f.read_text()).items()} if cache_f.exists() else {}
     cache = {k: v for k, v in cache.items() if v.get("tag")}
     prov = provider()
     model = args.model or ("gemini-3-flash-preview" if prov[0] == "gemini" else "gpt-5.4-mini")
     print(f"model: {prov[0]} / {model}", flush=True)
-    for size in (10, 4, 1):  # מה שנשמט במנה גדולה עובר שוב במנות קטנות
+    for size in (10, 4, 1):  # anything missed in a large batch is tried again in smaller batches
         todo = [m["i"] for m in meta if m["i"] not in cache]
         if not todo:
             break
@@ -170,10 +170,10 @@ def main():
                         cache_f.write_text(json.dumps(cache, ensure_ascii=False))
         except Fatal as e:
             cache_f.write_text(json.dumps(cache, ensure_ascii=False))
-            raise SystemExit(f"עצרתי: {e} (סווגו עד עכשיו {len(cache)} מתוך {len(meta)})")
+            raise SystemExit(f"Stopped: {e} (classified {len(cache)} of {len(meta)} so far)")
         cache_f.write_text(json.dumps(cache, ensure_ascii=False))
 
-    # 2. חדות, חתימות ושיבוץ ראשוני
+    # 2. Sharpness, signatures, and a first assignment
     for m in meta:
         p = run / "cls" / f"{m['i']:05d}.jpg"
         g = cache.get(m["i"], {})
@@ -186,14 +186,14 @@ def main():
         m["accidental"] = bool(g.get("accidental"))
         m["ts"] = datetime.fromisoformat(m["date"]).timestamp()
 
-    # 3. כפולות: בודקים רק שכנים בזמן (מהיר גם ל-10,000 תמונות). החדה בכל קבוצה נשארת
+    # 3. Duplicates: only neighbors in time are compared (fast even at 10,000 photos). The sharpest in each group is kept
     by_time = sorted(meta, key=lambda m: m["ts"])
     keep_of = {}
     for k, a in enumerate(by_time):
         for b in by_time[k + 1:]:
             if b["ts"] - a["ts"] > 600:
                 break
-            lim = 1 if (a["screenshot"] or b["screenshot"]) else 4  # צילומי מסך של אותה אפליקציה דומים גם כשהם שונים
+            lim = 1 if (a["screenshot"] or b["screenshot"]) else 4  # screenshots of the same app look alike even when they differ
             if bin(a["dh"] ^ b["dh"]).count("1") <= lim:
                 ra, rb = keep_of.get(a["i"], a["i"]), keep_of.get(b["i"], b["i"])
                 if ra == rb:
@@ -207,7 +207,7 @@ def main():
     for m in meta:
         m["dup_of"] = keep_of.get(m["i"])
 
-    # 4. טיולים לפי GPS: בית = התא (בערך 50 ק"מ) עם הכי הרבה תמונות
+    # 4. Trips from GPS: home = the cell (about 50 km) with the most photos
     geo = [m for m in meta if m.get("lat") is not None]
     trip_of = {}
     if len(geo) >= 10:
@@ -215,7 +215,7 @@ def main():
         home = cells.most_common(1)[0][0]
         away = sorted([m for m in geo if km((m["lat"], m["lon"]), home) > 80], key=lambda m: m["ts"])
         groups, cur = [], []
-        for m in away:  # פער של יותר משלושה ימים = טיול חדש
+        for m in away:  # a gap of more than three days starts a new trip
             if cur and m["ts"] - cur[-1]["ts"] > 3 * 86400:
                 groups.append(cur); cur = []
             cur.append(m)
@@ -228,7 +228,7 @@ def main():
                     trip_of[m["i"]] = "*"
                 continue
             d = datetime.fromtimestamp(g[len(g) // 2]["ts"])
-            name = f"{HEB_MONTHS[d.month - 1]} {d.year}"
+            name = f"{MONTHS[d.month - 1]} {d.year}"
             names[name] += 1
             if names[name] > 1:
                 name += f" ({names[name]})"
@@ -238,7 +238,7 @@ def main():
     for m in meta:
         m["trip"] = trip_of.get(m["i"]) or ("*" if m["cat"] == "trip" else None)
 
-    # 5. שיבוץ סופי
+    # 5. Final assignment
     for m in meta:
         if m["dup_of"] is not None:
             m["album"] = "dupes"

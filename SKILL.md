@@ -1,75 +1,77 @@
 ---
 name: gallery-sorter
-description: מסדר הגלריה. לוקח את התמונות מהטלפון (אייפון או אנדרואיד), מבין מה יש בכל תמונה, מוצא כפולות ומטושטשות, מסדר הכול בתיקיות לפי נושא (טיולים, משפחה, קבלות, צילומי מסך) ומציג ממשק מונפש שבו כל התמונות עפות לאלבומים, מוכן לצילום מסך לסרטון. אף פעם לא מוחק ולא מזיז את המקור. להפעיל כשמבקשים "תסדר לי את הגלריה", "מסדר הגלריה", "יש לי אלפי תמונות בטלפון", "תמצא לי כפולות בתמונות", "gallery sorter".
+description: "Gallery Sorter, a Transformaiton.com tool. Takes photos from a phone (iPhone or Android), understands what is in each picture, finds duplicates and blurry shots, sorts everything into topic folders (trips, family, receipts, screenshots), and opens an animated studio where the photos fly into albums, ready to screen-record. It never deletes or moves an original. Use when someone asks to sort a camera roll, tidy a phone gallery, find duplicate photos, or mentions gallery sorter."
 ---
 
-# מסדר הגלריה
+# Gallery Sorter
 
-אתה מוביל אדם שלא בהכרח מכיר טרמינל דרך סידור הגלריה שלו. דבר בעברית, צעד אחד בכל פעם, ותגיד מה אתה עושה לפני שאתה עושה. את כל הפקודות אתה מריץ בעצמך; ממנו אתה מבקש רק מה שאדם צריך לעשות בעצמו: לחבר טלפון, ליצור מפתח, לאשר.
+You are walking someone through sorting their camera roll. They may not know the terminal. Speak English, one step at a time, and say what you are about to do before you do it. You run every command yourself. Ask them only for the things a person has to do: connect a phone, create an API key, and approve.
 
-## שלושה כללי ברזל
+## Three rules
 
-1. **לא מוחקים ולא מזיזים.** הסקיל מעתיק בלבד. כפולות ומטושטשות נכנסות לתיקייה "לבדיקה לפני מחיקה", והמחיקה, אם בכלל, נעשית ביד אצלו בטלפון.
-2. **מתחילים קטן.** הרצה ראשונה על 200 תמונות, מראים את התוצאה, ורק אחרי "כן" מריצים על הכול.
-3. **שקיפות על פרטיות.** לפני שליחת תמונות למודל, אומרים לו במפורש מה נשלח ולאן (ראו "פרטיות" למטה).
+1. **Never delete and never move.** The tool copies only. Duplicates and blurry shots go into a folder named "Review before deleting". Deleting, if they want it at all, is done by hand on their phone.
+2. **Start small.** The first run covers 200 photos. Show the result, and run the full library only after they say yes.
+3. **Be plain about privacy.** Before any photo is sent to a model, tell them exactly what is sent and where (see "Privacy" below).
 
-## הכלים
+## The tools
 
-כל הסקריפטים בתיקייה `scripts/` שליד הקובץ הזה. תיקיית הבית של הכלי: `~/.gallery-sorter/` (סביבת פייתון, המפתח, וההרצות).
+Every script lives in the `scripts/` directory next to this file. The tool's home directory is `~/.gallery-sorter/` (the Python environment, the API key, and the runs).
 
-| שלב | פקודה | מה זה עושה |
+Run each script with the virtualenv's Python, from the skill directory. On macOS and Linux that is `~/.gallery-sorter/venv/bin/python`. On Windows it is `%USERPROFILE%\.gallery-sorter\venv\Scripts\python`.
+
+| Step | Command | What it does |
 |---|---|---|
-| 0 | `find_sources.py` | מוצא איפה התמונות יושבות ומדפיס את הפקודה |
-| 1 | `gather.py --folder PATH` או `--mac-photos` | אוסף עותקים מוקטנים + תאריך ו-GPS. מקבל גם קובצי zip של Takeout כמו שהם. המקור לא זז |
-| 2 | `classify.py --run RUN` | מודל ראייה מסווג, כפולות, מטושטשות, טיולים לפי GPS |
-| 3 | `build_studio.py --run RUN` | הממשק המונפש, נפתח בדפדפן |
-| 4 | `organize.py --run RUN` ואז `--apply` | תוכנית, ואחרי אישור העתקה לתיקיות |
+| 0 | `scripts/find_sources.py` | Finds where the photos are and prints the command |
+| 1 | `scripts/gather.py --folder PATH` or `--mac-photos` | Collects small copies plus date and GPS. Accepts Takeout zip files as they are. The original does not move |
+| 2 | `scripts/classify.py --run RUN` | A vision model classifies; then duplicates, blurry shots, and trips from GPS |
+| 3 | `scripts/build_studio.py --run RUN` | The animated studio, opened in a browser |
+| 4 | `scripts/organize.py --run RUN` and then `--apply` | A plan, and after approval a copy into folders |
 
-## המהלך
+## The path
 
-### 0. איפה התמונות (אתה מחפש, לא הוא)
-1. אחרי הכנת הסביבה (שלב 1), הרץ `find_sources.py`. הוא מוצא לבד ספריית Photos במק, תיקיית iCloud Photos בווינדוס, קובצי Google Takeout בהורדות, וטלפון או כרטיס זיכרון מחוברים.
-2. מצא מקור? הצע אותו: "מצאתי את ספריית התמונות שלך במק, 30 אלף תמונות. נתחיל משם?"
-3. לא מצא? שאל שאלה אחת: "איזה טלפון יש לך, ואיזה מחשב?" ותן רק את ההוראות של המסלול שלו מתוך `reference/devices.md`. הדרכים הכי קלות: אייפון עם מק = ספריית Photos (אפס הכנה); כל מי שמגבה ל-Google Photos = Google Takeout (להוריד את קובצי ה-zip ולא לחלץ, הסקיל מחלץ לבד).
+### 0. Where the photos are (you look, not them)
+1. After the environment is ready (step 1), run `scripts/find_sources.py`. It finds a Mac Photos library, an iCloud Photos folder on Windows, Google Takeout zip files in Downloads, and a connected phone or memory card.
+2. Found a source? Offer it: "I found your Photos library on this Mac, about 30,000 photos. Shall we start there?"
+3. Nothing found? Ask one question: "Which phone do you have, and which computer?" Then give only the steps for that path from `reference/devices.md`. The easiest paths: an iPhone with a Mac is the Photos library (no preparation); anyone who backs up to Google Photos uses Google Takeout (download the zip files and do not unzip them; the tool extracts the photos itself).
 
-### 1. הכנת הסביבה (אתה מריץ)
-- בדוק שיש פייתון 3.10 ומעלה (`python3 --version`, בווינדוס `py --version`). אם אין, הסבר איך מתקינים מ-python.org ועצור עד שיש.
-- צור סביבה: `python3 -m venv ~/.gallery-sorter/venv` (בווינדוס `py -m venv %USERPROFILE%\.gallery-sorter\venv`), והתקן: `pip install -r requirements.txt`.
-- מסלול "אייפון + מק עם תמונות iCloud" בלבד: גם `pip install osxphotos`.
-- מכאן כל פקודה רצה עם הפייתון של הסביבה.
+### 1. Prepare the environment (you run this)
+- Check for Python 3.10 or newer (`python3 --version`, on Windows `py --version`). If it is missing, explain how to install it from python.org and stop until it is there.
+- Create the environment: `python3 -m venv ~/.gallery-sorter/venv` (on Windows `py -m venv %USERPROFILE%\.gallery-sorter\venv`), then install: `pip install -r requirements.txt`.
+- Only for "iPhone + Mac with iCloud photos": also `pip install osxphotos`.
+- From here, every command uses that environment's Python.
 
-### 2. המפתח למודל
-המיון צריך מפתח של מודל ראייה. ברירת המחדל Gemini של Google (הכי זול):
-1. בקש ממנו להיכנס ל-https://aistudio.google.com/apikey, להתחבר עם חשבון גוגל וללחוץ Create API key.
-2. בקש שידביק לך את המפתח, ושמור אותו בקובץ `~/.gallery-sorter/.env` בשורה `GEMINI_API_KEY=...` (הרשאות 600 במק/לינוקס). לעולם אל תכתוב את המפתח בחזרה בצ'אט.
-3. יש לו כבר מפתח של OpenAI? אפשר במקום: `OPENAI_API_KEY=...` באותו קובץ. הסקריפט בוחר לבד.
+### 2. The model key
+Sorting needs a vision-model key. The default is Google Gemini (the cheaper option):
+1. Ask them to open https://aistudio.google.com/apikey, sign in with a Google account, and click Create API key.
+2. Ask them to paste the key. Save it in `~/.gallery-sorter/.env` as one line, `GEMINI_API_KEY=...` (mode 600 on Mac and Linux). Never print the key back in the chat.
+3. They already have an OpenAI key? That works instead: `OPENAI_API_KEY=...` in the same file. The script chooses by itself.
 
-**פרטיות (חובה להגיד לפני השליחה):** למודל נשלח רק עותק מוקטן של כל תמונה (384 פיקסלים), לא המקור. במסלול החינמי של Gemini, Google רשאית להשתמש בנתונים לשיפור המוצרים שלה; בחשבון עם חיוב (Billing) לא. בגלריה עם ילדים ומסמכים אישיים, המלץ להפעיל חיוב (העלות בערך חצי דולר לאלף תמונות) או להשתמש במפתח OpenAI. שאל אם להמשיך.
+**Privacy (you must say this before anything is sent):** only a small copy of each photo (384 pixels) is sent to the model, not the original. On Gemini's free tier, Google may use that data to improve its products. On an account with billing turned on, it does not. For a gallery with children or personal documents, recommend turning billing on (about half a US dollar per thousand photos) or using an OpenAI key. Ask whether to continue. Suggest they confirm the provider's current terms, because those terms can change.
 
-### 3. הרצת ניסיון על 200 תמונות
+### 3. A trial run of 200 photos
 ```
-gather.py --folder "<התיקייה>" --n 200 --out ~/.gallery-sorter/runs/try
-classify.py --run ~/.gallery-sorter/runs/try
-build_studio.py --run ~/.gallery-sorter/runs/try
+scripts/gather.py --folder "<the-folder>" --n 200 --out ~/.gallery-sorter/runs/try
+scripts/classify.py --run ~/.gallery-sorter/runs/try
+scripts/build_studio.py --run ~/.gallery-sorter/runs/try
 ```
-הממשק נפתח בדפדפן. אמור לו: "לחץ/י על הכפתור 'סדר לי את הגלריה'". אחר כך הראה את הספירה לכל אלבום (מהפלט של classify) ושאל אם הסיווג נראה נכון.
+The studio opens in the browser. Tell them: "Click the button that says Sort my gallery." Then show the count for each album (from the classify output) and ask whether the sorting looks right.
 
-### 4. ההרצה המלאה
-אחרי "כן": אותן פקודות עם `--n` גדול יותר (ברירת מחדל 1000; אפשר 5000 ומעלה) ותיקיית הרצה חדשה. סיווג לוקח בערך דקה ל-100 תמונות. הקאש שומר כל מה שסווג, כך שאם משהו נעצר מריצים שוב ומשלמים רק על מה שחסר.
+### 4. The full run
+After they say yes: the same commands with a larger `--n` (the default is 1000; 5000 or more is fine) and a new run directory. Classification takes about a minute per 100 photos. The cache keeps everything already classified, so if a run stops you run it again and pay only for what is missing.
 
-### 5. הסידור בתיקיות
-1. `organize.py --run RUN` מדפיס תוכנית (כמה תמונות לכל תיקייה), בלי לגעת בכלום. הראה לו.
-2. שאל איפה לשים את התיקיות (ברירת מחדל: `~/Pictures/מסדר הגלריה`) ובקש אישור מפורש.
-3. רק אחרי אישור: אותה פקודה עם `--dest "<המקום>" --apply`. זה מעתיק. המקור לא נגע.
-4. פתח לו את תיקיית התוצאה, והסבר על "לבדיקה לפני מחיקה": לעבור, ולמחוק בטלפון רק מה שבאמת מיותר.
+### 5. Sorting into folders
+1. `scripts/organize.py --run RUN` prints a plan (how many photos in each folder) and touches nothing. Show it to them.
+2. Ask where to put the folders (the default is `~/Pictures/Gallery Sorter`) and get an explicit yes.
+3. Only after that yes: the same command with `--dest "<the-place>" --apply`. This copies. The originals are not touched.
+4. Open the result folder for them, and explain "Review before deleting": look through it, and delete on the phone only what is truly unwanted.
 
-### 6. סרטון
-הממשק הוא `RUN/studio/index.html`. כדי לצלם: מסך מלא בדפדפן, לחיצה על הכפתור, ו-R חוזר להתחלה לטייק נוסף. אפשר לצלם את המסך בטלפון (נראה הכי אמיתי) או בהקלטת מסך.
+### 6. A video
+The studio is `RUN/studio/index.html`. To record: full screen in the browser, click the button, and press R to return to the start for another take. They can film the screen with a phone (it looks the most natural) or use a screen recording.
 
-## כשמשהו לא עובד
-- "נגמר הקרדיט" / "המפתח לא תקין": הסקריפט עוצר מיד ושומר את מה שסווג. מטפלים במפתח ומריצים שוב.
-- "לא נמצאו תמונות": התיקייה לא נכונה, או שקובץ ה-zip לא הורד עד הסוף (Takeout). קובצי zip לא צריך לחלץ.
-- Takeout גדול: החילוץ צריך מקום פנוי בגודל קובצי ה-zip (find_sources מדפיס כמה). אפשר להריץ על חלק מהקבצים.
-- HEIC לא נפתח: ודא ש-pillow-heif הותקן בסביבה.
-- מק, `--mac-photos` נתקע או נכשל בהרשאות: ייצאו את התמונות לתיקייה (Photos ← File ← Export) והשתמשו ב-`--folder`.
-- תמונות שיושבות רק ב-iCloud (בלי עותק במק) מדולגות במסלול המק. מי שרוצה את כולן: בהגדרות Photos לבחור "Download Originals to this Mac".
+## When something fails
+- "out of credit" / "the API key is not valid": the script stops immediately and keeps what it already classified. Fix the key and run it again.
+- "No photos found": the folder is wrong, or a zip file did not finish downloading (Takeout). Zip files do not need to be unzipped.
+- A large Takeout: extraction needs about as much free disk as the zip files (find_sources prints how much). You can run on some of the files.
+- HEIC will not open: make sure pillow-heif was installed in the environment.
+- On a Mac, `--mac-photos` stalls or fails on permissions: export the photos to a folder (Photos, File, Export) and use `--folder`.
+- Photos that live only in iCloud (no copy on the Mac) are skipped on the Mac path. To include all of them: in Photos settings, choose "Download Originals to this Mac".
